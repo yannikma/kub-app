@@ -4,25 +4,20 @@ const fs = require('fs');
 const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
-
-
-const client = require('prom-client');
-const app = express();
-
-const collectDefaultMetrics = client.collectDefaultMetrics;
-// Probe every 5th second.
-collectDefaultMetrics({ timeout: 5000 });
-
-// Metrics endpoint
-app.get('/metrics', (req, res) => {
-  res.set('Content-Type', client.register.contentType)
-  res.end(client.register.metrics())
-})
-
+// Importing the Prometheus-Client
+const promClient = require('prom-client');
 
 const filePath = path.join(__dirname, process.env.TASKS_FOLDER, 'tasks.txt');
 
+const app = express();
 
+const register = new promClient.Registry();
+// Add a default label which is added to all metrics
+register.setDefaultLabels({
+  app: 'chat-app'
+})
+// Enable the collection of default metrics
+promClient.collectDefaultMetrics({register})
 
 app.use(bodyParser.json());
 
@@ -82,5 +77,16 @@ app.post('/tasks', async (req, res) => {
     return res.status(401).json({ message: 'Could not verify token.' });
   }
 });
+
+// Creating the metrics endpoint
+app.get('/metrics', async (req, res) => {
+  try {
+      res.set('Content-Type', register.contentType)
+      let metrics = await register.metrics();
+      res.send(metrics)
+  } catch (ex) {
+      res.status(500).end(ex);
+  }
+})
 
 app.listen(8000);
