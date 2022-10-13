@@ -1,13 +1,12 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: tasks-monitor
   labels:
-    # This is important for Prometheus, otherwise it won't show up in the targets
-    release: prometheus-operator
-spec:
-  selector:
-    matchLabels:
-      app: tasks
-  endpoints:
-  - port: web-tasks
+    release: prometheus 
+  name: tasks-monitor 
+spec: 
+  selector: 
+    matchLabels: 
+      app: tasks 
+  endpoints: 
+  - port: web-tasks 
